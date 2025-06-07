@@ -44,78 +44,161 @@ const upload = multer({
 class AdminController {
     // ===== AUTHENTICATION =====
     static async loginPage(req, res) {
-        if (req.session && req.session.adminId) {
-            return res.redirect('/admin/dashboard');
-        }
+    // Redirect jika sudah login
+    if (req.session && req.session.adminId) {
+        return res.redirect('/admin/dashboard');
+    }
+    
+    try {
         res.render('admin/login', { 
             title: 'Admin Login',
-            error: null 
+            error: null,
+            success: null,
+            csrfToken: req.session.csrfToken || null
         });
+    } catch (error) {
+        console.error('Error rendering login page:', error);
+        res.status(500).send('Error loading login page');
     }
+}
 
     static async login(req, res) {
-        try {
-            const { username, password } = req.body;
+    try {
+        const { username, password, remember } = req.body;
 
-            if (!username || !password) {
-                return res.render('admin/login', {
-                    title: 'Admin Login',
-                    error: 'Username dan password harus diisi'
-                });
-            }
-
-            const admin = await AdminUserModel.getAdminByUsername(username);
-            if (!admin) {
-                return res.render('admin/login', {
-                    title: 'Admin Login',
-                    error: 'Username atau password salah'
-                });
-            }
-
-            const isValidPassword = await bcrypt.compare(password, admin.password);
-            if (!isValidPassword) {
-                return res.render('admin/login', {
-                    title: 'Admin Login',
-                    error: 'Username atau password salah'
-                });
-            }
-
-            // Create session
-            const sessionId = uuidv4();
-            const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-            
-            await AdminUserModel.createSession(sessionId, admin.id, expiresAt);
-            await AdminUserModel.updateLastLogin(admin.id);
-
-            // Set session cookie
-            req.session.adminId = admin.id;
-            req.session.sessionId = sessionId;
-            req.session.username = admin.username;
-            req.session.role = admin.role;
-
-            res.redirect('/admin/dashboard');
-        } catch (error) {
-            console.error('Login error:', error);
-            res.render('admin/login', {
+        // Validasi input
+        if (!username || !password) {
+            return res.render('admin/login', {
                 title: 'Admin Login',
-                error: 'Terjadi kesalahan sistem'
+                error: 'Username dan password harus diisi',
+                success: null,
+                csrfToken: req.session.csrfToken || null
             });
         }
+
+        if (username.length < 3) {
+            return res.render('admin/login', {
+                title: 'Admin Login',
+                error: 'Username minimal 3 karakter',
+                success: null,
+                csrfToken: req.session.csrfToken || null
+            });
+        }
+
+        if (password.length < 6) {
+            return res.render('admin/login', {
+                title: 'Admin Login',
+                error: 'Password minimal 6 karakter',
+                success: null,
+                csrfToken: req.session.csrfToken || null
+            });
+        }
+
+        console.log('🔄 Login attempt for username:', username);
+
+        // Cari admin user
+        const admin = await AdminUserModel.getAdminByUsername(username);
+        if (!admin) {
+            console.log('❌ Admin not found:', username);
+            return res.render('admin/login', {
+                title: 'Admin Login',
+                error: 'Username atau password salah',
+                success: null,
+                csrfToken: req.session.csrfToken || null
+            });
+        }
+
+        console.log('👤 Admin found:', {
+            id: admin.id,
+            username: admin.username,
+            role: admin.role,
+            is_active: admin.is_active
+        });
+
+        // Cek apakah admin aktif
+        if (!admin.is_active) {
+            console.log('❌ Admin account disabled:', username);
+            return res.render('admin/login', {
+                title: 'Admin Login',
+                error: 'Akun admin tidak aktif. Hubungi administrator sistem.',
+                success: null,
+                csrfToken: req.session.csrfToken || null
+            });
+        }
+
+        // Verifikasi password
+        console.log('🔐 Verifying password...');
+        const isValidPassword = await bcrypt.compare(password, admin.password);
+        
+        if (!isValidPassword) {
+            console.log('❌ Invalid password for user:', username);
+            return res.render('admin/login', {
+                title: 'Admin Login',
+                error: 'Username atau password salah',
+                success: null,
+                csrfToken: req.session.csrfToken || null
+            });
+        }
+
+        console.log('✅ Password verification successful');
+
+        // Generate session
+        const sessionId = uuidv4();
+        const expiresAt = new Date(Date.now() + (remember ? 30 : 1) * 24 * 60 * 60 * 1000); // 30 days if remember, 1 day if not
+        
+        console.log('🔄 Creating session...');
+        await AdminUserModel.createSession(sessionId, admin.id, expiresAt);
+        await AdminUserModel.updateLastLogin(admin.id);
+
+        // Set session data
+        req.session.adminId = admin.id;
+        req.session.sessionId = sessionId;
+        req.session.username = admin.username;
+        req.session.role = admin.role;
+
+        console.log('✅ Login successful for:', username);
+        console.log('🎯 Redirecting to dashboard...');
+
+        // Redirect ke dashboard
+        res.redirect('/admin/dashboard');
+
+    } catch (error) {
+        console.error('❌ Login error:', error);
+        res.render('admin/login', {
+            title: 'Admin Login',
+            error: 'Terjadi kesalahan sistem. Silakan coba lagi.',
+            success: null,
+            csrfToken: req.session.csrfToken || null
+        });
     }
+}
 
     static async logout(req, res) {
-        try {
-            if (req.session && req.session.sessionId) {
-                await AdminUserModel.deleteSession(req.session.sessionId);
-            }
-            req.session.destroy(() => {
-                res.redirect('/admin/login');
-            });
-        } catch (error) {
-            console.error('Logout error:', error);
-            res.redirect('/admin/login');
+    try {
+        console.log('🔄 Logout request from:', req.session?.username);
+
+        // Hapus session dari database
+        if (req.session && req.session.sessionId) {
+            await AdminUserModel.deleteSession(req.session.sessionId);
+            console.log('✅ Session deleted from database');
         }
+
+        // Destroy session
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('❌ Error destroying session:', err);
+            } else {
+                console.log('✅ Session destroyed successfully');
+            }
+            
+            res.redirect('/admin/login');
+        });
+
+    } catch (error) {
+        console.error('❌ Logout error:', error);
+        res.redirect('/admin/login');
     }
+}
 
     // ===== DASHBOARD =====
     static async dashboard(req, res) {

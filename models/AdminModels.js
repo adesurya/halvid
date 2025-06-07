@@ -382,7 +382,10 @@ class AdminUserModel {
 class AnalyticsModel {
     static async getDashboardStats() {
         try {
-            // Total statistics
+            // Pastikan tabel ada sebelum query
+            await this.ensureTablesExist();
+
+            // Total statistics - dengan error handling
             const [totalStats] = await db.execute(`
                 SELECT 
                     (SELECT COUNT(*) FROM videos WHERE status = 'published') as total_videos,
@@ -393,52 +396,87 @@ class AnalyticsModel {
                     (SELECT COUNT(*) FROM videos WHERE status = 'published' AND DATE(created_at) = CURDATE()) as today_uploads
             `);
 
-            // Popular videos (last 7 days)
-            const [popularVideos] = await db.execute(`
-                SELECT v.id, v.title, v.thumbnail, v.views, v.likes, v.duration,
-                       c.name as category_name, c.color as category_color
-                FROM videos v
-                LEFT JOIN categories c ON v.category_id = c.id
-                WHERE v.status = 'published' AND v.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-                ORDER BY v.views DESC, v.likes DESC
-                LIMIT 10
-            `);
+            // Popular videos (last 7 days) - dengan fallback
+            let popularVideos = [];
+            try {
+                const [popularResult] = await db.execute(`
+                    SELECT v.id, v.title, v.thumbnail, v.views, v.likes, v.duration,
+                           c.name as category_name, c.color as category_color
+                    FROM videos v
+                    LEFT JOIN categories c ON v.category_id = c.id
+                    WHERE v.status = 'published' AND v.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                    ORDER BY v.views DESC, v.likes DESC
+                    LIMIT 10
+                `);
+                popularVideos = popularResult;
+            } catch (error) {
+                console.warn('Could not fetch popular videos:', error.message);
+                popularVideos = [];
+            }
 
-            // Recent uploads
-            const [recentVideos] = await db.execute(`
-                SELECT v.id, v.title, v.thumbnail, v.status, v.created_at,
-                       c.name as category_name
-                FROM videos v
-                LEFT JOIN categories c ON v.category_id = c.id
-                ORDER BY v.created_at DESC
-                LIMIT 5
-            `);
+            // Recent uploads - dengan fallback
+            let recentVideos = [];
+            try {
+                const [recentResult] = await db.execute(`
+                    SELECT v.id, v.title, v.thumbnail, v.status, v.created_at,
+                           c.name as category_name
+                    FROM videos v
+                    LEFT JOIN categories c ON v.category_id = c.id
+                    ORDER BY v.created_at DESC
+                    LIMIT 5
+                `);
+                recentVideos = recentResult;
+            } catch (error) {
+                console.warn('Could not fetch recent videos:', error.message);
+                recentVideos = [];
+            }
 
-            // Views trend (last 30 days)
-            const [viewsTrend] = await db.execute(`
-                SELECT DATE(created_at) as date, 
-                       COUNT(*) as uploads,
-                       COALESCE(SUM(views), 0) as views
-                FROM videos 
-                WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-                GROUP BY DATE(created_at)
-                ORDER BY date ASC
-            `);
+            // Views trend (last 30 days) - dengan fallback
+            let viewsTrend = [];
+            try {
+                const [trendsResult] = await db.execute(`
+                    SELECT DATE(created_at) as date, 
+                           COUNT(*) as uploads,
+                           COALESCE(SUM(views), 0) as views
+                    FROM videos 
+                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                    GROUP BY DATE(created_at)
+                    ORDER BY date ASC
+                `);
+                viewsTrend = trendsResult;
+            } catch (error) {
+                console.warn('Could not fetch views trend:', error.message);
+                viewsTrend = [];
+            }
 
-            // Category statistics
-            const [categoryStats] = await db.execute(`
-                SELECT c.name, c.color, 
-                       COUNT(v.id) as video_count,
-                       COALESCE(SUM(v.views), 0) as total_views
-                FROM categories c
-                LEFT JOIN videos v ON c.id = v.category_id AND v.status = 'published'
-                WHERE c.is_active = 1
-                GROUP BY c.id, c.name, c.color
-                ORDER BY total_views DESC
-            `);
+            // Category statistics - dengan fallback
+            let categoryStats = [];
+            try {
+                const [categoryResult] = await db.execute(`
+                    SELECT c.name, c.color, 
+                           COUNT(v.id) as video_count,
+                           COALESCE(SUM(v.views), 0) as total_views
+                    FROM categories c
+                    LEFT JOIN videos v ON c.id = v.category_id AND v.status = 'published'
+                    WHERE c.is_active = 1
+                    GROUP BY c.id, c.name, c.color
+                    ORDER BY total_views DESC
+                `);
+                categoryStats = categoryResult;
+            } catch (error) {
+                console.warn('Could not fetch category stats:', error.message);
+                categoryStats = [];
+            }
 
             return {
-                totalStats: totalStats[0],
+                totalStats: totalStats[0] || {
+                    total_videos: 0,
+                    total_categories: 0,
+                    total_series: 0,
+                    total_views: 0,
+                    total_likes: 0,
+                    today_uploads: 0
+                },
                 popularVideos,
                 recentVideos,
                 viewsTrend,
@@ -446,67 +484,30 @@ class AnalyticsModel {
             };
         } catch (error) {
             console.error('Error in getDashboardStats:', error);
-            throw error;
-        }
-    }
-
-    static async getVideoAnalytics(videoId, days = 30) {
-        try {
-            const [videoStats] = await db.execute(`
-                SELECT DATE(created_at) as date,
-                       views, likes, created_at
-                FROM videos 
-                WHERE id = ? AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
-            `, [videoId, days]);
-
-            // Daily view stats (if exists)
-            const [dailyStats] = await db.execute(`
-                SELECT date, views, likes, shares, watch_time
-                FROM video_stats 
-                WHERE video_id = ? AND date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                ORDER BY date ASC
-            `, [videoId, days]);
-
-            return {
-                videoStats: videoStats[0],
-                dailyStats
-            };
-        } catch (error) {
-            console.error('Error in getVideoAnalytics:', error);
-            throw error;
-        }
-    }
-
-    static async updateVideoStats(videoId) {
-        try {
-            const today = new Date().toISOString().split('T')[0];
             
-            // Get current video data
-            const [video] = await db.execute(
-                'SELECT views, likes FROM videos WHERE id = ?',
-                [videoId]
-            );
-
-            if (video.length === 0) return;
-
-            // Update or insert daily stats
-            await db.execute(`
-                INSERT INTO video_stats (video_id, date, views, likes)
-                VALUES (?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                views = VALUES(views),
-                likes = VALUES(likes),
-                updated_at = NOW()
-            `, [videoId, today, video[0].views, video[0].likes]);
-
-        } catch (error) {
-            console.error('Error in updateVideoStats:', error);
-            throw error;
+            // Return safe defaults
+            return {
+                totalStats: {
+                    total_videos: 0,
+                    total_categories: 0,
+                    total_series: 0,
+                    total_views: 0,
+                    total_likes: 0,
+                    today_uploads: 0
+                },
+                popularVideos: [],
+                recentVideos: [],
+                viewsTrend: [],
+                categoryStats: []
+            };
         }
     }
 
     static async getTopVideos(period = 'week', limit = 10) {
         try {
+            // Pastikan tabel videos ada
+            await this.ensureTablesExist();
+
             let whereClause = '';
             switch (period) {
                 case 'today':
@@ -525,6 +526,9 @@ class AnalyticsModel {
                     whereClause = '';
             }
 
+            // Ensure limit is a valid number
+            const validLimit = Math.max(1, Math.min(100, parseInt(limit) || 10));
+
             const [rows] = await db.execute(`
                 SELECT v.id, v.title, v.thumbnail, v.views, v.likes, v.duration, v.created_at,
                        c.name as category_name, c.color as category_color,
@@ -535,17 +539,19 @@ class AnalyticsModel {
                 WHERE v.status = 'published' ${whereClause}
                 ORDER BY v.views DESC, v.likes DESC
                 LIMIT ?
-            `, [limit]);
+            `, [validLimit]);
 
-            return rows;
+            return rows || [];
         } catch (error) {
             console.error('Error in getTopVideos:', error);
-            throw error;
+            return [];
         }
     }
 
     static async getCategoryPerformance() {
         try {
+            await this.ensureTablesExist();
+
             const [rows] = await db.execute(`
                 SELECT c.id, c.name, c.color,
                        COUNT(v.id) as video_count,
@@ -560,15 +566,19 @@ class AnalyticsModel {
                 ORDER BY total_views DESC
             `);
 
-            return rows;
+            return rows || [];
         } catch (error) {
             console.error('Error in getCategoryPerformance:', error);
-            throw error;
+            return [];
         }
     }
 
     static async getUploadTrends(days = 30) {
         try {
+            await this.ensureTablesExist();
+
+            const validDays = Math.max(1, Math.min(365, parseInt(days) || 30));
+
             const [rows] = await db.execute(`
                 SELECT DATE(created_at) as date,
                        COUNT(*) as uploads,
@@ -578,194 +588,147 @@ class AnalyticsModel {
                 WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
                 GROUP BY DATE(created_at)
                 ORDER BY date ASC
-            `, [days]);
+            `, [validDays]);
 
-            return rows;
+            return rows || [];
         } catch (error) {
             console.error('Error in getUploadTrends:', error);
-            throw error;
+            return [];
+        }
+    }
+
+    // Helper method to ensure required tables exist
+    static async ensureTablesExist() {
+        try {
+            // Check if videos table exists
+            const [videosTables] = await db.execute("SHOW TABLES LIKE 'videos'");
+            if (videosTables.length === 0) {
+                console.log('📝 Creating videos table...');
+                await this.createVideosTable();
+            }
+
+            // Check if categories table exists
+            const [categoriesTables] = await db.execute("SHOW TABLES LIKE 'categories'");
+            if (categoriesTables.length === 0) {
+                console.log('📝 Creating categories table...');
+                await this.createCategoriesTable();
+            }
+
+            // Check if series table exists
+            const [seriesTables] = await db.execute("SHOW TABLES LIKE 'series'");
+            if (seriesTables.length === 0) {
+                console.log('📝 Creating series table...');
+                await this.createSeriesTable();
+            }
+
+        } catch (error) {
+            console.error('Error ensuring tables exist:', error);
+        }
+    }
+
+    static async createVideosTable() {
+        try {
+            await db.execute(`
+                CREATE TABLE videos (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    title VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    filename VARCHAR(255),
+                    file_path TEXT,
+                    file_url TEXT,
+                    file_key VARCHAR(255),
+                    thumbnail TEXT,
+                    duration INT DEFAULT 0,
+                    views INT DEFAULT 0,
+                    likes INT DEFAULT 0,
+                    tags TEXT,
+                    category_id INT NULL,
+                    series_id INT NULL,
+                    episode_number INT NULL,
+                    file_size BIGINT NULL,
+                    video_width INT NULL,
+                    video_height INT NULL,
+                    fps DECIMAL(5,2) NULL,
+                    bitrate INT NULL,
+                    codec VARCHAR(50) NULL,
+                    status ENUM('draft', 'published', 'archived') DEFAULT 'draft',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    INDEX idx_status (status),
+                    INDEX idx_category (category_id),
+                    INDEX idx_series (series_id),
+                    INDEX idx_created (created_at),
+                    INDEX idx_views (views),
+                    INDEX idx_likes (likes)
+                )
+            `);
+            console.log('✅ Videos table created successfully');
+        } catch (error) {
+            console.error('Error creating videos table:', error);
+        }
+    }
+
+    static async createCategoriesTable() {
+        try {
+            await db.execute(`
+                CREATE TABLE categories (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    name VARCHAR(100) NOT NULL,
+                    description TEXT,
+                    slug VARCHAR(100) UNIQUE NOT NULL,
+                    image TEXT,
+                    color VARCHAR(7) DEFAULT '#6366f1',
+                    is_active BOOLEAN DEFAULT TRUE,
+                    sort_order INT DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    INDEX idx_slug (slug),
+                    INDEX idx_active (is_active),
+                    INDEX idx_sort (sort_order)
+                )
+            `);
+            console.log('✅ Categories table created successfully');
+        } catch (error) {
+            console.error('Error creating categories table:', error);
+        }
+    }
+
+    static async createSeriesTable() {
+        try {
+            await db.execute(`
+                CREATE TABLE series (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    title VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    slug VARCHAR(255) UNIQUE NOT NULL,
+                    thumbnail TEXT,
+                    category_id INT NULL,
+                    total_videos INT DEFAULT 0,
+                    total_duration INT DEFAULT 0,
+                    total_views INT DEFAULT 0,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    INDEX idx_slug (slug),
+                    INDEX idx_category (category_id),
+                    INDEX idx_active (is_active)
+                )
+            `);
+            console.log('✅ Series table created successfully');
+        } catch (error) {
+            console.error('Error creating series table:', error);
         }
     }
 }
 
-// ===== VIDEO MODEL EXTENSIONS =====
+// ===== VIDEO MANAGEMENT MODEL FIXES =====
 class VideoManagementModel {
-    static async getAllVideosForAdmin(page = 1, limit = 20, filters = {}) {
-        try {
-            const offset = (page - 1) * limit;
-            let whereConditions = [];
-            let params = [];
-
-            // Build filters
-            if (filters.status) {
-                whereConditions.push('v.status = ?');
-                params.push(filters.status);
-            }
-
-            if (filters.category_id) {
-                whereConditions.push('v.category_id = ?');
-                params.push(filters.category_id);
-            }
-
-            if (filters.series_id) {
-                whereConditions.push('v.series_id = ?');
-                params.push(filters.series_id);
-            }
-
-            if (filters.search) {
-                whereConditions.push('(v.title LIKE ? OR v.description LIKE ? OR v.tags LIKE ?)');
-                const searchTerm = `%${filters.search}%`;
-                params.push(searchTerm, searchTerm, searchTerm);
-            }
-
-            const whereClause = whereConditions.length > 0 ? 
-                'WHERE ' + whereConditions.join(' AND ') : '';
-
-            // Get videos
-            const [videos] = await db.execute(`
-                SELECT v.*, 
-                       c.name as category_name, c.color as category_color,
-                       s.title as series_title
-                FROM videos v
-                LEFT JOIN categories c ON v.category_id = c.id
-                LEFT JOIN series s ON v.series_id = s.id
-                ${whereClause}
-                ORDER BY v.created_at DESC
-                LIMIT ? OFFSET ?
-            `, [...params, limit, offset]);
-
-            // Get total count
-            const [countResult] = await db.execute(`
-                SELECT COUNT(*) as total
-                FROM videos v
-                LEFT JOIN categories c ON v.category_id = c.id
-                LEFT JOIN series s ON v.series_id = s.id
-                ${whereClause}
-            `, params);
-
-            return {
-                videos,
-                total: countResult[0].total,
-                page,
-                limit,
-                totalPages: Math.ceil(countResult[0].total / limit)
-            };
-        } catch (error) {
-            console.error('Error in getAllVideosForAdmin:', error);
-            throw error;
-        }
-    }
-
-    static async updateVideoStatus(id, status) {
-        try {
-            const [result] = await db.execute(
-                'UPDATE videos SET status = ?, updated_at = NOW() WHERE id = ?',
-                [status, id]
-            );
-            return result.affectedRows > 0;
-        } catch (error) {
-            console.error('Error in updateVideoStatus:', error);
-            throw error;
-        }
-    }
-
-    static async createVideoRecord(videoData) {
-        try {
-            const {
-                title, description, filename, file_path, file_url, file_key,
-                thumbnail, duration, tags, category_id, series_id, episode_number,
-                file_size, video_width, video_height, fps, bitrate, codec, status
-            } = videoData;
-
-            const [result] = await db.execute(`
-                INSERT INTO videos (
-                    title, description, filename, file_path, file_url, file_key,
-                    thumbnail, duration, tags, category_id, series_id, episode_number,
-                    file_size, video_width, video_height, fps, bitrate, codec, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `, [
-                title, description, filename, file_path, file_url, file_key,
-                thumbnail, duration, tags, category_id, series_id, episode_number,
-                file_size, video_width, video_height, fps, bitrate, codec, status || 'draft'
-            ]);
-
-            // Update series stats if video belongs to a series
-            if (series_id) {
-                await SeriesModel.updateSeriesStats(series_id);
-            }
-
-            return result.insertId;
-        } catch (error) {
-            console.error('Error in createVideoRecord:', error);
-            throw error;
-        }
-    }
-
-    static async updateVideoRecord(id, videoData) {
-        try {
-            const {
-                title, description, thumbnail, tags, category_id, 
-                series_id, episode_number, status
-            } = videoData;
-
-            const [result] = await db.execute(`
-                UPDATE videos SET 
-                    title = ?, description = ?, thumbnail = ?, tags = ?,
-                    category_id = ?, series_id = ?, episode_number = ?, status = ?,
-                    updated_at = NOW()
-                WHERE id = ?
-            `, [
-                title, description, thumbnail, tags, 
-                category_id, series_id, episode_number, status, id
-            ]);
-
-            // Update series stats if needed
-            if (series_id) {
-                await SeriesModel.updateSeriesStats(series_id);
-            }
-
-            return result.affectedRows > 0;
-        } catch (error) {
-            console.error('Error in updateVideoRecord:', error);
-            throw error;
-        }
-    }
-
-    static async deleteVideoRecord(id) {
-        try {
-            // Get video info first
-            const [video] = await db.execute(
-                'SELECT series_id, file_key FROM videos WHERE id = ?',
-                [id]
-            );
-
-            if (video.length === 0) return false;
-
-            const seriesId = video[0].series_id;
-
-            // Delete video record
-            const [result] = await db.execute(
-                'DELETE FROM videos WHERE id = ?',
-                [id]
-            );
-
-            // Update series stats if needed
-            if (seriesId) {
-                await SeriesModel.updateSeriesStats(seriesId);
-            }
-
-            return {
-                success: result.affectedRows > 0,
-                fileKey: video[0].file_key
-            };
-        } catch (error) {
-            console.error('Error in deleteVideoRecord:', error);
-            throw error;
-        }
-    }
-
     static async getVideosByStatus(status, limit = 10) {
         try {
+            await AnalyticsModel.ensureTablesExist();
+            
+            const validLimit = Math.max(1, Math.min(100, parseInt(limit) || 10));
+
             const [rows] = await db.execute(`
                 SELECT v.*, c.name as category_name, s.title as series_title
                 FROM videos v
@@ -774,27 +737,36 @@ class VideoManagementModel {
                 WHERE v.status = ?
                 ORDER BY v.created_at DESC
                 LIMIT ?
-            `, [status, limit]);
+            `, [status, validLimit]);
 
-            return rows;
+            return rows || [];
         } catch (error) {
             console.error('Error in getVideosByStatus:', error);
-            throw error;
+            return [];
         }
     }
 
-    static async bulkUpdateStatus(videoIds, status) {
+    static async getVideoById(id) {
         try {
-            const placeholders = videoIds.map(() => '?').join(',');
-            const [result] = await db.execute(`
-                UPDATE videos SET status = ?, updated_at = NOW() 
-                WHERE id IN (${placeholders})
-            `, [status, ...videoIds]);
+            await AnalyticsModel.ensureTablesExist();
+            
+            const videoId = parseInt(id);
+            if (!videoId || videoId < 1) {
+                return null;
+            }
 
-            return result.affectedRows;
+            const [rows] = await db.execute(`
+                SELECT v.*, c.name as category_name, s.title as series_title
+                FROM videos v
+                LEFT JOIN categories c ON v.category_id = c.id
+                LEFT JOIN series s ON v.series_id = s.id
+                WHERE v.id = ?
+            `, [videoId]);
+
+            return rows[0] || null;
         } catch (error) {
-            console.error('Error in bulkUpdateStatus:', error);
-            throw error;
+            console.error('Error in getVideoById:', error);
+            return null;
         }
     }
 }
