@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title + ' - ' : '' %>ShortVideo</title>
+    
+    <!-- CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    
+    <!-- Meta tags -->
+    <meta name="description" content="Platform untuk menonton video pendek yang menarik">
+    <meta name="keywords" content="video pendek, entertainment, streaming">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="/">
+                    <i class="fas fa-play-circle"></i>
+                    <span>ShortVideo</span>
+                </a>
+            </div>
+            
+            <div class="nav-search">
+                <form action="/search" method="GET" class="search-form">
+                    <div class="search-input-container">
+                        <input 
+                            type="text" 
+                            name="q" 
+                            placeholder="Cari video..." 
+                            value="<%= typeof query !== 'undefined' ? query : '' %>"
+                            class="search-input"
+                        >
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="/" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Beranda</span>
+                </a>
+                <a href="/" class="nav-link">
+                    <i class="fas fa-fire"></i>
+                    <span>Trending</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <%- body %>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>ShortVideo</h3>
+                <p>Platform terbaik untuk menonton video pendek yang menghibur</p>
+            </div>
+            <div class="footer-section">
+                <h4>Navigasi</h4>
+                <ul>
+                    <li><a href="/">Beranda</a></li>
+                    <li><a href="/">Trending</a></li>
+                    <li><a href="/">Kategori</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Kontak</h4>
+                <p>Email: info@shortvideo.com</p>
+                <p>Telepon: +62 123 456 789</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 ShortVideo. Semua hak dilindungi.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/main.js"></script>
+</body>
+</html>
