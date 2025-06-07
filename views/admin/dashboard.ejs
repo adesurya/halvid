@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - ShortVideo</title>
+    
+    <!-- CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/chart.js/4.4.0/chart.min.css" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #f472b6;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            
+            --dark-bg: #0f172a;
+            --dark-surface: #1e293b;
+            --dark-card: #334155;
+            --dark-text: #f8fafc;
+            --dark-text-secondary: #cbd5e1;
+            
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            
+            --border-radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--dark-bg);
+            color: var(--dark-text);
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--dark-surface);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            transform: translateX(0);
+            transition: var(--transition);
+            overflow-y: auto;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--dark-text);
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        .sidebar-logo i {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 30px;
+        }
+
+        .nav-section-title {
+            padding: 0 20px 10px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--dark-text-secondary);
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: var(--dark-text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary-color);
+            border-left-color: var(--primary-color);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        /* Header */
+        .header {
+            height: var(--header-height);
+            background: var(--dark-surface);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            color: var(--dark-text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--dark-text);
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark-text);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: var(--dark-card);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .admin-details h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--dark-text);
+        }
+
+        .admin-details p {
+            font-size: 0.75rem;
+            color: var(--dark-text-secondary);
+        }
+
+        /* Page Content */
+        .page-content {
+            padding: 30px;
+        }
+
+        /* Welcome Banner */
+        .welcome-banner {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: var(--border-radius);
+            padding: 30px;
+            margin-bottom: 30px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(50%, -50%);
+        }
+
+        .welcome-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .welcome-content h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .welcome-content p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="/admin/dashboard" class="sidebar-logo">
+                <i class="fas fa-video"></i>
+                <span>ShortVideo Admin</span>
+            </a>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <a href="/admin/dashboard" class="nav-item active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/admin/analytics" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Content</div>
+                <a href="/admin/videos" class="nav-item">
+                    <i class="fas fa-play"></i>
+                    <span>Videos</span>
+                </a>
+                <a href="/admin/videos/upload" class="nav-item">
+                    <i class="fas fa-upload"></i>
+                    <span>Upload Video</span>
+                </a>
+                <a href="/admin/categories" class="nav-item">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="/admin/series" class="nav-item">
+                    <i class="fas fa-list"></i>
+                    <span>Series</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">System</div>
+                <% if (typeof admin !== 'undefined' && admin.role === 'super_admin') { %>
+                <a href="/admin/settings" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <% } %>
+                <a href="/admin/profile" class="nav-item">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="/admin/help" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title">Dashboard</h1>
+            </div>
+            
+            <div class="header-right">
+                <div class="admin-info">
+                    <div class="admin-avatar">
+                        <%= typeof admin !== 'undefined' && admin.full_name ? admin.full_name.charAt(0).toUpperCase() : 'A' %>
+                    </div>
+                    <div class="admin-details">
+                        <h4><%= typeof admin !== 'undefined' ? admin.full_name || admin.username : 'Admin' %></h4>
+                        <p><%= typeof admin !== 'undefined' ? admin.role || 'Administrator' : 'Administrator' %></p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <!-- Welcome Banner -->
+            <div class="welcome-banner">
+                <div class="welcome-content">
+                    <h1>Selamat datang kembali, <%= typeof admin !== 'undefined' ? admin.full_name || admin.username : 'Admin' %>!</h1>
+                    <p>Berikut adalah ringkasan aktivitas platform ShortVideo Anda hari ini.</p>
+                </div>
+            </div>
+            <style>
+                /* Stats Grid */
+                .stats-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 24px;
+                    margin-bottom: 30px;
+                }
+
+                .stat-card {
+                    background: var(--dark-surface);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: var(--border-radius);
+                    padding: 24px;
+                    transition: var(--transition);
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .stat-card:hover {
+                    transform: translateY(-4px);
+                    box-shadow: var(--shadow-lg);
+                    border-color: rgba(99, 102, 241, 0.3);
+                }
+
+                .stat-card::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 4px;
+                    background: var(--primary-color);
+                }
+
+                .stat-card.success::before { background: var(--success-color); }
+                .stat-card.warning::before { background: var(--warning-color); }
+                .stat-card.danger::before { background: var(--danger-color); }
+                .stat-card.info::before { background: var(--info-color); }
+
+                .stat-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    margin-bottom: 16px;
+                }
+
+                .stat-icon {
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.25rem;
+                    color: white;
+                }
+
+                .stat-icon.primary { background: var(--primary-color); }
+                .stat-icon.success { background: var(--success-color); }
+                .stat-icon.warning { background: var(--warning-color); }
+                .stat-icon.danger { background: var(--danger-color); }
+                .stat-icon.info { background: var(--info-color); }
+
+                .stat-value {
+                    font-size: 2rem;
+                    font-weight: bold;
+                    color: var(--dark-text);
+                    line-height: 1;
+                }
+
+                .stat-label {
+                    color: var(--dark-text-secondary);
+                    font-size: 0.875rem;
+                    margin-top: 4px;
+                }
+
+                .stat-change {
+                    font-size: 0.75rem;
+                    margin-top: 8px;
+                    padding: 4px 8px;
+                    border-radius: 20px;
+                    font-weight: 500;
+                }
+
+                .stat-change.positive {
+                    background: rgba(34, 197, 94, 0.2);
+                    color: var(--success-color);
+                }
+
+                .stat-change.negative {
+                    background: rgba(239, 68, 68, 0.2);
+                    color: var(--danger-color);
+                }
+
+                /* Cards */
+                .card {
+                    background: var(--dark-surface);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: var(--border-radius);
+                    margin-bottom: 24px;
+                    overflow: hidden;
+                }
+
+                .card-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 20px 24px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                }
+
+                .card-title {
+                    font-size: 1.125rem;
+                    font-weight: 600;
+                    color: var(--dark-text);
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                .card-title i {
+                    color: var(--primary-color);
+                }
+
+                .card-body {
+                    padding: 24px;
+                }
+
+                /* Chart Container */
+                .chart-container {
+                    position: relative;
+                    height: 350px;
+                    margin-bottom: 20px;
+                }
+
+                /* Quick Actions */
+                .quick-actions {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                }
+
+                .action-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 16px 20px;
+                    background: var(--dark-card);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: var(--border-radius);
+                    color: var(--dark-text);
+                    text-decoration: none;
+                    transition: var(--transition);
+                    font-weight: 500;
+                }
+
+                .action-btn:hover {
+                    background: rgba(99, 102, 241, 0.1);
+                    border-color: var(--primary-color);
+                    color: var(--primary-color);
+                    transform: translateX(4px);
+                }
+
+                .action-btn i {
+                    width: 20px;
+                    text-align: center;
+                    font-size: 1.1rem;
+                }
+
+                /* Buttons */
+                .btn {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border: none;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    text-decoration: none;
+                    cursor: pointer;
+                    transition: var(--transition);
+                    font-size: 0.875rem;
+                }
+
+                .btn-primary {
+                    background: var(--primary-color);
+                    color: white;
+                }
+
+                .btn-success {
+                    background: var(--success-color);
+                    color: white;
+                }
+
+                .btn-secondary {
+                    background: var(--dark-card);
+                    color: var(--dark-text);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                }
+
+                .btn-sm {
+                    padding: 6px 12px;
+                    font-size: 0.75rem;
+                }
+
+                .btn:hover {
+                    transform: translateY(-1px);
+                    box-shadow: var(--shadow);
+                }
+            </style>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card primary">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value" id="totalVideos">
+                                <%= typeof stats !== 'undefined' && stats.totalStats ? stats.totalStats.total_videos || 0 : 0 %>
+                            </div>
+                            <div class="stat-label">Total Videos</div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +12% minggu ini
+                            </div>
+                        </div>
+                        <div class="stat-icon primary">
+                            <i class="fas fa-video"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card success">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value" id="totalViews">
+                                <%= typeof stats !== 'undefined' && stats.totalStats ? (stats.totalStats.total_views || 0).toLocaleString() : '0' %>
+                            </div>
+                            <div class="stat-label">Total Views</div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +8% minggu ini
+                            </div>
+                        </div>
+                        <div class="stat-icon success">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card danger">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value" id="totalLikes">
+                                <%= typeof stats !== 'undefined' && stats.totalStats ? (stats.totalStats.total_likes || 0).toLocaleString() : '0' %>
+                            </div>
+                            <div class="stat-label">Total Likes</div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +15% minggu ini
+                            </div>
+                        </div>
+                        <div class="stat-icon danger">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card warning">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value" id="todayUploads">
+                                <%= typeof stats !== 'undefined' && stats.totalStats ? stats.totalStats.today_uploads || 0 : 0 %>
+                            </div>
+                            <div class="stat-label">Upload Hari Ini</div>
+                            <div class="stat-change negative">
+                                <i class="fas fa-arrow-down"></i>
+                                -3% dari kemarin
+                            </div>
+                        </div>
+                        <div class="stat-icon warning">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-bottom: 30px;">
+                <!-- Analytics Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-chart-line"></i>
+                            Views & Upload Trends
+                        </div>
+                        <select id="chartPeriod" class="btn btn-secondary btn-sm">
+                            <option value="7">7 Hari</option>
+                            <option value="30" selected>30 Hari</option>
+                            <option value="90">90 Hari</option>
+                        </select>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="viewsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-bolt"></i>
+                            Quick Actions
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions">
+                            <a href="/admin/videos/upload" class="action-btn">
+                                <i class="fas fa-upload"></i>
+                                <span>Upload Video Baru</span>
+                            </a>
+                            <a href="/admin/categories/create" class="action-btn">
+                                <i class="fas fa-plus"></i>
+                                <span>Tambah Kategori</span>
+                            </a>
+                            <a href="/admin/series/create" class="action-btn">
+                                <i class="fas fa-list"></i>
+                                <span>Buat Series Baru</span>
+                            </a>
+                            <a href="/admin/analytics" class="action-btn">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Lihat Analytics</span>
+                            </a>
+                            <a href="/admin/videos?status=draft" class="action-btn">
+                                <i class="fas fa-edit"></i>
+                                <span>Video Draft</span>
+                            </a>
+                            <a href="/" target="_blank" class="action-btn">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Lihat Website</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <style>
+                /* Tables */
+                .table-container {
+                    overflow-x: auto;
+                    border-radius: var(--border-radius);
+                }
+
+                .table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+
+                .table th,
+                .table td {
+                    padding: 16px;
+                    text-align: left;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                }
+
+                .table th {
+                    background: var(--dark-card);
+                    font-weight: 600;
+                    color: var(--dark-text);
+                    font-size: 0.875rem;
+                }
+
+                .table td {
+                    color: var(--dark-text-secondary);
+                }
+
+                .table tr:hover {
+                    background: rgba(255, 255, 255, 0.02);
+                }
+
+                .video-thumbnail {
+                    width: 60px;
+                    height: 40px;
+                    border-radius: 6px;
+                    object-fit: cover;
+                }
+
+                .video-info {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .video-details h4 {
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    color: var(--dark-text);
+                    margin-bottom: 4px;
+                }
+
+                .video-meta {
+                    font-size: 0.75rem;
+                    color: var(--dark-text-secondary);
+                }
+
+                .badge {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 4px 8px;
+                    border-radius: 20px;
+                    font-size: 0.75rem;
+                    font-weight: 500;
+                }
+
+                .badge-success {
+                    background: rgba(34, 197, 94, 0.2);
+                    color: var(--success-color);
+                }
+
+                .badge-warning {
+                    background: rgba(245, 158, 11, 0.2);
+                    color: var(--warning-color);
+                }
+
+                .badge-info {
+                    background: rgba(59, 130, 246, 0.2);
+                    color: var(--info-color);
+                }
+
+                /* Responsive */
+                @media (max-width: 1024px) {
+                    .sidebar {
+                        transform: translateX(-100%);
+                    }
+
+                    .sidebar.show {
+                        transform: translateX(0);
+                    }
+
+                    .main-content {
+                        margin-left: 0;
+                    }
+
+                    .stats-grid {
+                        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                        gap: 16px;
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .page-content {
+                        padding: 20px;
+                    }
+
+                    .header {
+                        padding: 0 20px;
+                    }
+
+                    .stats-grid {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .admin-info {
+                        display: none;
+                    }
+
+                    .welcome-banner {
+                        padding: 20px;
+                    }
+
+                    .welcome-content h1 {
+                        font-size: 1.5rem;
+                    }
+                }
+
+                /* Animations */
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+
+                .stat-card {
+                    animation: fadeIn 0.6s ease-out;
+                }
+
+                .stat-card:nth-child(1) { animation-delay: 0.1s; }
+                .stat-card:nth-child(2) { animation-delay: 0.2s; }
+                .stat-card:nth-child(3) { animation-delay: 0.3s; }
+                .stat-card:nth-child(4) { animation-delay: 0.4s; }
+            </style>
+
+            <!-- Content Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <!-- Popular Videos -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-fire"></i>
+                            Video Populer
+                        </div>
+                        <a href="/admin/videos" class="btn btn-secondary btn-sm">Lihat Semua</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Video</th>
+                                        <th>Views</th>
+                                        <th>Likes</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (typeof topVideos !== 'undefined' && topVideos && topVideos.length > 0) { %>
+                                        <% topVideos.forEach(video => { %>
+                                        <tr>
+                                            <td>
+                                                <div class="video-info">
+                                                    <img src="<%= video.thumbnail || '/images/default-thumbnail.jpg' %>" 
+                                                         alt="<%= video.title %>" 
+                                                         class="video-thumbnail">
+                                                    <div class="video-details">
+                                                        <h4><%= video.title.length > 25 ? video.title.substring(0, 25) + '...' : video.title %></h4>
+                                                        <div class="video-meta">
+                                                            <% if (video.category_name) { %>
+                                                                <span class="badge badge-info"><%= video.category_name %></span>
+                                                            <% } %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td><%= video.views.toLocaleString() %></td>
+                                            <td><%= video.likes.toLocaleString() %></td>
+                                            <td>
+                                                <span class="badge badge-success">
+                                                    <i class="fas fa-check"></i>
+                                                    Published
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="4" style="text-align: center; padding: 40px; color: var(--dark-text-secondary);">
+                                                <i class="fas fa-video" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                                                <p>Belum ada video populer</p>
+                                                <a href="/admin/videos/upload" class="btn btn-primary btn-sm" style="margin-top: 10px;">Upload Video Pertama</a>
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Drafts -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-edit"></i>
+                            Draft Terbaru
+                        </div>
+                        <a href="/admin/videos?status=draft" class="btn btn-secondary btn-sm">Lihat Semua</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Video</th>
+                                        <th>Dibuat</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (typeof recentDrafts !== 'undefined' && recentDrafts && recentDrafts.length > 0) { %>
+                                        <% recentDrafts.forEach(video => { %>
+                                        <tr>
+                                            <td>
+                                                <div class="video-info">
+                                                    <img src="<%= video.thumbnail || '/images/default-thumbnail.jpg' %>" 
+                                                         alt="<%= video.title %>" 
+                                                         class="video-thumbnail">
+                                                    <div class="video-details">
+                                                        <h4><%= video.title.length > 20 ? video.title.substring(0, 20) + '...' : video.title %></h4>
+                                                        <div class="video-meta">
+                                                            <% if (video.category_name) { %>
+                                                                <span class="badge badge-warning"><%= video.category_name %></span>
+                                                            <% } %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div style="font-size: 0.875rem; color: var(--dark-text-secondary);">
+                                                    <%= new Date(video.created_at).toLocaleDateString('id-ID', { 
+                                                        day: 'numeric', 
+                                                        month: 'short' 
+                                                    }) %>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div style="display: flex; gap: 8px;">
+                                                    <a href="/admin/videos/<%= video.id %>/edit" class="btn btn-primary btn-sm" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button onclick="publishVideo(<%= video.id %>)" class="btn btn-success btn-sm" title="Publish">
+                                                        <i class="fas fa-upload"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="3" style="text-align: center; padding: 40px; color: var(--dark-text-secondary);">
+                                                <i class="fas fa-edit" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                                                <p>Tidak ada draft video</p>
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Category Performance -->
+            <div class="card" style="margin-top: 30px;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-tags"></i>
+                        Performa Kategori
+                    </div>
+                    <a href="/admin/categories" class="btn btn-secondary btn-sm">Kelola Kategori</a>
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+                        <% if (typeof stats !== 'undefined' && stats.categoryStats && stats.categoryStats.length > 0) { %>
+                            <% stats.categoryStats.forEach((category, index) => { %>
+                            <div style="background: var(--dark-card); padding: 20px; border-radius: var(--border-radius); border: 1px solid rgba(255, 255, 255, 0.1); transition: var(--transition); animation: fadeIn 0.6s ease-out; animation-delay: <%= index * 0.1 %>s;" 
+                                 onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)'"
+                                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                                    <h4 style="color: var(--dark-text); font-size: 1rem; margin: 0; font-weight: 600;">
+                                        <%= category.name %>
+                                    </h4>
+                                    <div style="width: 16px; height: 16px; border-radius: 50%; background: <%= category.color || '#6366f1' %>; box-shadow: 0 0 10px <%= category.color || '#6366f1' %>33;"></div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                    <span style="color: var(--dark-text-secondary); font-size: 0.875rem;">
+                                        <i class="fas fa-video"></i> Videos
+                                    </span>
+                                    <span style="color: var(--dark-text); font-weight: 600;">
+                                        <%= category.video_count || 0 %>
+                                    </span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: var(--dark-text-secondary); font-size: 0.875rem;">
+                                        <i class="fas fa-eye"></i> Views
+                                    </span>
+                                    <span style="color: var(--dark-text); font-weight: 600;">
+                                        <%= (category.total_views || 0).toLocaleString() %>
+                                    </span>
+                                </div>
+                                <div style="margin-top: 12px; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden;">
+                                    <div style="height: 100%; background: <%= category.color || '#6366f1' %>; width: <%= Math.min(100, (category.total_views || 0) / Math.max(1, Math.max(...(stats.categoryStats || []).map(c => c.total_views || 0))) * 100) %>%; transition: width 1s ease;"></div>
+                                </div>
+                            </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div style="grid-column: 1 / -1; text-align: center; color: var(--dark-text-secondary); padding: 60px 20px;">
+                                <i class="fas fa-tags" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;"></i>
+                                <h3 style="margin-bottom: 12px; color: var(--dark-text);">Belum Ada Kategori</h3>
+                                <p style="margin-bottom: 20px;">Buat kategori pertama untuk mengorganisir video Anda</p>
+                                <a href="/admin/categories/create" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i>
+                                    Buat Kategori Pertama
+                                </a>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Overview -->
+            <div class="card" style="margin-top: 30px;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-server"></i>
+                        Ringkasan Sistem
+                    </div>
+                    <button onclick="refreshStats()" class="btn btn-secondary btn-sm" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px;">
+                        <div style="text-align: center; padding: 20px; background: rgba(99, 102, 241, 0.1); border-radius: var(--border-radius);">
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color); margin-bottom: 8px;">
+                                <%= typeof stats !== 'undefined' && stats.totalStats ? stats.totalStats.total_categories || 0 : 0 %>
+                            </div>
+                            <div style="color: var(--dark-text-secondary); font-size: 0.875rem;">Kategori Aktif</div>
+                        </div>
+                        <div style="text-align: center; padding: 20px; background: rgba(34, 197, 94, 0.1); border-radius: var(--border-radius);">
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--success-color); margin-bottom: 8px;">
+                                <%= typeof stats !== 'undefined' && stats.totalStats ? stats.totalStats.total_series || 0 : 0 %>
+                            </div>
+                            <div style="color: var(--dark-text-secondary); font-size: 0.875rem;">Series Tersedia</div>
+                        </div>
+                        <div style="text-align: center; padding: 20px; background: rgba(59, 130, 246, 0.1); border-radius: var(--border-radius);">
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--info-color); margin-bottom: 8px;">
+                                <%= typeof stats !== 'undefined' && stats.totalStats ? Math.round((stats.totalStats.total_views || 0) / Math.max(1, stats.totalStats.total_videos || 1)) : 0 %>
+                            </div>
+                            <div style="color: var(--dark-text-secondary); font-size: 0.875rem;">Rata-rata Views</div>
+                        </div>
+                        <div style="text-align: center; padding: 20px; background: rgba(245, 158, 11, 0.1); border-radius: var(--border-radius);">
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--warning-color); margin-bottom: 8px;">
+                                <%= typeof stats !== 'undefined' && stats.totalStats ? Math.round(((stats.totalStats.total_likes || 0) / Math.max(1, stats.totalStats.total_views || 1)) * 100) : 0 %>%
+                            </div>
+                            <div style="color: var(--dark-text-secondary); font-size: 0.875rem;">Engagement Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Storage Information -->
+            <div class="card" style="margin-top: 30px;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-cloud"></i>
+                        Storage Information
+                    </div>
+                    <button onclick="checkStorageInfo()" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-info-circle"></i>
+                        Check Storage
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="storageInfo" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div style="text-align: center; padding: 20px;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                            <div style="color: var(--dark-text-secondary); font-size: 0.875rem;">Loading storage info...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/4.4.0/chart.min.js"></script>
+    <script>
+        // Global variables
+        let viewsChart = null;
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDashboard();
+        });
+
+        function initializeDashboard() {
+            setupSidebarToggle();
+            initializeCharts();
+            setupDashboardEvents();
+            loadRealtimeStats();
+            checkStorageInfo();
+            setupAutoRefresh();
+        }
+
+        function setupSidebarToggle() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+
+            // Restore sidebar state
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+            }
+
+            // Handle mobile
+            if (window.innerWidth <= 1024) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+            }
+        }
+
+        function initializeCharts() {
+            const ctx = document.getElementById('viewsChart');
+            if (ctx) {
+                const chartData = <%= JSON.stringify((typeof stats !== 'undefined' && stats.viewsTrend) ? stats.viewsTrend : []) %>;
+                
+                const labels = chartData.map(item => {
+                    const date = new Date(item.date);
+                    return date.toLocaleDateString('id-ID', { 
+                        month: 'short', 
+                        day: 'numeric' 
+                    });
+                });
+
+                const viewsData = chartData.map(item => item.views || 0);
+                const uploadsData = chartData.map(item => item.uploads || 0);
+
+                viewsChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels.length > 0 ? labels : ['Tidak ada data'],
+                        datasets: [{
+                            label: 'Views',
+                            data: viewsData.length > 0 ? viewsData : [0],
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#6366f1',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        }, {
+                            label: 'Uploads',
+                            data: uploadsData.length > 0 ? uploadsData : [0],
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.4,
+                            fill: false,
+                            yAxisID: 'y1',
+                            pointBackgroundColor: '#22c55e',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#f8fafc',
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                                titleColor: '#f8fafc',
+                                bodyColor: '#cbd5e1',
+                                borderColor: '#6366f1',
+                                borderWidth: 1
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: '#cbd5e1'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            },
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                ticks: {
+                                    color: '#cbd5e1'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                ticks: {
+                                    color: '#22c55e'
+                                },
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function setupDashboardEvents() {
+            const chartPeriod = document.getElementById('chartPeriod');
+            if (chartPeriod) {
+                chartPeriod.addEventListener('change', function() {
+                    updateChart(this.value);
+                });
+            }
+
+            window.addEventListener('resize', function() {
+                const sidebar = document.getElementById('sidebar');
+                const mainContent = document.getElementById('mainContent');
+                
+                if (window.innerWidth <= 1024) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                } else {
+                    const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                    if (!sidebarCollapsed) {
+                        sidebar.classList.remove('collapsed');
+                        mainContent.classList.remove('expanded');
+                    }
+                }
+            });
+        }
+
+        function updateChart(period) {
+            showNotification('Mengupdate data chart...', 'info');
+            
+            fetch(`/admin/api/analytics?type=upload-trends&period=${period}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && viewsChart) {
+                        const chartData = data.data;
+                        
+                        const labels = chartData.map(item => {
+                            const date = new Date(item.date);
+                            return date.toLocaleDateString('id-ID', { 
+                                month: 'short', 
+                                day: 'numeric' 
+                            });
+                        });
+
+                        viewsChart.data.labels = labels;
+                        viewsChart.data.datasets[0].data = chartData.map(item => item.views || 0);
+                        viewsChart.data.datasets[1].data = chartData.map(item => item.uploads || 0);
+                        viewsChart.update();
+                        
+                        showNotification('Chart berhasil diupdate!', 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating chart:', error);
+                    showNotification('Gagal mengupdate chart', 'error');
+                });
+        }
+
+        function publishVideo(videoId) {
+            if (!confirm('Apakah Anda yakin ingin mempublikasikan video ini?')) {
+                return;
+            }
+
+            const button = event.target.closest('button');
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            button.disabled = true;
+
+            fetch(`/admin/videos/${videoId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    status: 'published'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Video berhasil dipublikasikan!', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    throw new Error(data.message || 'Gagal mempublikasikan video');
+                }
+            })
+            .catch(error => {
+                console.error('Error publishing video:', error);
+                showNotification('Gagal mempublikasikan video: ' + error.message, 'error');
+            })
+            .finally(() => {
+                button.innerHTML = originalContent;
+                button.disabled = false;
+            });
+        }
+
+        function refreshStats() {
+            const button = document.getElementById('refreshBtn');
+            const icon = button.querySelector('i');
+            
+            icon.classList.add('fa-spin');
+            button.disabled = true;
+
+            fetch('/admin/api/quick-stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateStatsDisplay(data.data);
+                        showNotification('Statistik berhasil direfresh!', 'success');
+                    } else {
+                        throw new Error('Gagal mengambil statistik');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing stats:', error);
+                    showNotification('Gagal merefresh statistik', 'error');
+                })
+                .finally(() => {
+                    icon.classList.remove('fa-spin');
+                    button.disabled = false;
+                });
+        }
+
+        function updateStatsDisplay(stats) {
+            const totalVideos = document.getElementById('totalVideos');
+            const totalViews = document.getElementById('totalViews');
+            const totalLikes = document.getElementById('totalLikes');
+            const todayUploads = document.getElementById('todayUploads');
+
+            if (totalVideos) animateValue(totalVideos, parseInt(totalVideos.textContent) || 0, stats.total_videos || 0);
+            if (totalViews) animateValue(totalViews, parseInt(totalViews.textContent.replace(/,/g, '')) || 0, stats.total_views || 0, true);
+            if (totalLikes) animateValue(totalLikes, parseInt(totalLikes.textContent.replace(/,/g, '')) || 0, stats.total_likes || 0, true);
+            if (todayUploads) animateValue(todayUploads, parseInt(todayUploads.textContent) || 0, stats.today_uploads || 0);
+        }
+
+        function animateValue(element, start, end, useCommas = false) {
+            const duration = 1000;
+            const range = end - start;
+            const increment = range / (duration / 16);
+            let current = start;
+
+            const timer = setInterval(() => {
+                current += increment;
+                if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                    current = end;
+                    clearInterval(timer);
+                }
+                element.textContent = useCommas ? Math.round(current).toLocaleString() : Math.round(current);
+            }, 16);
+        }
+
+        function loadRealtimeStats() {
+            setInterval(() => {
+                fetch('/admin/api/quick-stats')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            updateStatsDisplay(data.data);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading real-time stats:', error);
+                    });
+            }, 60000); // 60 seconds
+        }
+
+        function checkStorageInfo() {
+            const storageInfo = document.getElementById('storageInfo');
+            
+            fetch('/admin/api/storage-stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        storageInfo.innerHTML = `
+                            <div style="text-align: center; padding: 20px; background: rgba(59, 130, 246, 0.1); border-radius: var(--border-radius);">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--info-color); margin-bottom: 8px;">
+                                    ${data.totalFiles || 0}
+                                </div>
+                                <div style="color: var(--dark-text-secondary); font-size: 0.875rem;">Total Files</div>
+                            </div>
+                            <div style="text-align: center; padding: 20px; background: rgba(34, 197, 94, 0.1); border-radius: var(--border-radius);">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--success-color); margin-bottom: 8px;">
+                                    ${data.totalSizeFormatted || '0 B'}
+                                </div>
+                                <div style="color: var(--dark-text-secondary); font-size: 0.875rem;">Used Storage</div>
+                            </div>
+                            <div style="text-align: center; padding: 20px; background: rgba(245, 158, 11, 0.1); border-radius: var(--border-radius);">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--warning-color); margin-bottom: 8px;">
+                                    ${data.videoFiles || 0}
+                                </div>
+                                <div style="color: var(--dark-text-secondary); font-size: 0.875rem;">Video Files</div>
+                            </div>
+                            <div style="text-align: center; padding: 20px; background: rgba(239, 68, 68, 0.1); border-radius: var(--border-radius);">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--danger-color); margin-bottom: 8px;">
+                                    ${data.imageFiles || 0}
+                                </div>
+                                <div style="color: var(--dark-text-secondary); font-size: 0.875rem;">Image Files</div>
+                            </div>
+                        `;
+                    } else {
+                        storageInfo.innerHTML = `
+                            <div style="text-align: center; padding: 40px; color: var(--dark-text-secondary); grid-column: 1 / -1;">
+                                <i class="fas fa-cloud-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                                <p>Tidak dapat memuat informasi storage</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading storage info:', error);
+                    storageInfo.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: var(--dark-text-secondary); grid-column: 1 / -1;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <p>Error memuat informasi storage</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function setupAutoRefresh() {
+            if (window.location.hostname === 'localhost') {
+                setInterval(() => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (!urlParams.has('no-refresh')) {
+                        console.log('Auto-refreshing dashboard data...');
+                        loadRealtimeStats();
+                        checkStorageInfo();
+                    }
+                }, 5 * 60 * 1000); // 5 minutes
+            }
+        }
+
+        function getCSRFToken() {
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            
+            const colors = {
+                success: '#22c55e',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--dark-surface);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-left: 4px solid ${colors[type]};
+                border-radius: var(--border-radius);
+                padding: 16px 20px;
+                max-width: 400px;
+                box-shadow: var(--shadow-lg);
+                z-index: 10000;
+                transform: translateX(450px);
+                transition: all 0.3s ease;
+            `;
+
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fas ${icons[type]}" style="color: ${colors[type]}; font-size: 1.25rem;"></i>
+                    <span style="color: var(--dark-text); flex: 1;">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: var(--dark-text-secondary); cursor: pointer; padding: 4px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(450px)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 5000);
+        }
+
+        // Error handling
+        window.addEventListener('error', (e) => {
+            console.error('Dashboard Error:', e.error);
+            showNotification('Terjadi kesalahan pada dashboard', 'error');
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled Promise Rejection:', e.reason);
+            showNotification('Terjadi kesalahan jaringan', 'error');
+        });
+
+        // Online/offline status
+        window.addEventListener('online', () => {
+            showNotification('Koneksi internet tersambung kembali', 'success');
+            loadRealtimeStats();
+        });
+
+        window.addEventListener('offline', () => {
+            showNotification('Koneksi internet terputus', 'warning');
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                refreshStats();
+            }
+
+            if (e.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal, .dropdown');
+                modals.forEach(modal => {
+                    if (modal.classList.contains('show')) {
+                        modal.classList.remove('show');
+                    }
+                });
+            }
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                loadRealtimeStats();
+            }
+        });
+
+        console.log('🎬 ShortVideo Admin Dashboard loaded successfully!');
+    </script>
+
+    <!-- CSRF Token Meta -->
+    <% if (typeof csrfToken !== 'undefined') { %>
+    <meta name="csrf-token" content="<%= csrfToken %>">
+    <% } %>
+
+    <!-- Additional Meta Tags -->
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="ShortVideo Admin Dashboard">
+    <meta name="author" content="ShortVideo Team">
+</body>
+</html>

@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technology Radar - Payment Company</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+        
+        .radar-container {
+            display: flex;
+            padding: 40px;
+            gap: 40px;
+            background: #f8f9fa;
+        }
+        
+        .radar-svg-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .legend {
+            width: 350px;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+        
+        .legend h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .quadrant-legend {
+            margin-bottom: 25px;
+        }
+        
+        .quadrant-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        
+        .tech-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .tech-item:hover {
+            background: #f0f0f0;
+        }
+        
+        .tech-number {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+        }
+        
+        .adopt { background: #27ae60; }
+        .trial { background: #f39c12; }
+        .assess { background: #3498db; }
+        .hold { background: #e74c3c; }
+        
+        .ring-legend {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+        }
+        
+        .ring-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .ring-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin: 0 auto 5px;
+        }
+        
+        .tech-tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 200px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Technology Radar</h1>
+            <p>Payment Company - Q2 2025 | Enterprise Architecture Portfolio</p>
+        </div>
+        
+        <div class="radar-container">
+            <div class="radar-svg-container">
+                <svg width="600" height="600" id="radar-svg">
+                    <!-- Radar will be drawn here -->
+                </svg>
+            </div>
+            
+            <div class="legend">
+                <h3>📊 Technology Portfolio</h3>
+                
+                <div class="quadrant-legend">
+                    <div class="quadrant-title">🔧 Tools</div>
+                    <div class="tech-item">
+                        <div class="tech-number adopt">1</div>
+                        <span>Docker & Kubernetes</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number adopt">2</div>
+                        <span>Jenkins CI/CD</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number trial">3</div>
+                        <span>Istio Service Mesh</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number assess">4</div>
+                        <span>AI Testing Tools</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number hold">5</div>
+                        <span>Legacy Monitoring</span>
+                    </div>
+                </div>
+                
+                <div class="quadrant-legend">
+                    <div class="quadrant-title">📚 Techniques</div>
+                    <div class="tech-item">
+                        <div class="tech-number adopt">6</div>
+                        <span>Microservices</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number adopt">7</div>
+                        <span>DevOps Practices</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number trial">8</div>
+                        <span>Event Sourcing</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number assess">9</div>
+                        <span>Chaos Engineering</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number hold">10</div>
+                        <span>Monolithic Architecture</span>
+                    </div>
+                </div>
+                
+                <div class="quadrant-legend">
+                    <div class="quadrant-title">🏗️ Platforms</div>
+                    <div class="tech-item">
+                        <div class="tech-number adopt">11</div>
+                        <span>AWS Cloud</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number adopt">12</div>
+                        <span>PostgreSQL</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number trial">13</div>
+                        <span>Serverless (Lambda)</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number assess">14</div>
+                        <span>Quantum Computing</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number hold">15</div>
+                        <span>On-premises DC</span>
+                    </div>
+                </div>
+                
+                <div class="quadrant-legend">
+                    <div class="quadrant-title">💻 Languages & Frameworks</div>
+                    <div class="tech-item">
+                        <div class="tech-number adopt">16</div>
+                        <span>Java Spring Boot</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number adopt">17</div>
+                        <span>React.js</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number trial">18</div>
+                        <span>Go Language</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number assess">19</div>
+                        <span>Rust</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-number hold">20</div>
+                        <span>Legacy Java EE</span>
+                    </div>
+                </div>
+                
+                <div class="ring-legend">
+                    <div class="ring-item">
+                        <div class="ring-color adopt"></div>
+                        <strong>Adopt</strong><br>
+                        <small>Production Ready</small>
+                    </div>
+                    <div class="ring-item">
+                        <div class="ring-color trial"></div>
+                        <strong>Trial</strong><br>
+                        <small>Pilot Projects</small>
+                    </div>
+                    <div class="ring-item">
+                        <div class="ring-color assess"></div>
+                        <strong>Assess</strong><br>
+                        <small>Research Phase</small>
+                    </div>
+                    <div class="ring-item">
+                        <div class="ring-color hold"></div>
+                        <strong>Hold</strong><br>
+                        <small>Avoid/Deprecate</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tech-tooltip" id="tooltip"></div>
+    
+    <script>
+        // Technology data with positions and details
+        const technologies = [
+            // Tools Quadrant
+            { id: 1, name: "Docker & Kubernetes", ring: "adopt", quadrant: "tools", angle: 45, radius: 60, description: "Container orchestration - Production ready" },
+            { id: 2, name: "Jenkins CI/CD", ring: "adopt", quadrant: "tools", angle: 60, radius: 80, description: "Continuous Integration - Standardized across teams" },
+            { id: 3, name: "Istio Service Mesh", ring: "trial", quadrant: "tools", angle: 30, radius: 140, description: "Service mesh - Pilot deployment" },
+            { id: 4, name: "AI Testing Tools", ring: "assess", quadrant: "tools", angle: 75, radius: 200, description: "AI-powered testing - Under evaluation" },
+            { id: 5, name: "Legacy Monitoring", ring: "hold", quadrant: "tools", angle: 15, radius: 260, description: "Old monitoring tools - Phase out planned" },
+            
+            // Techniques Quadrant  
+            { id: 6, name: "Microservices", ring: "adopt", quadrant: "techniques", angle: 135, radius: 70, description: "Architecture pattern - Organization standard" },
+            { id: 7, name: "DevOps Practices", ring: "adopt", quadrant: "techniques", angle: 120, radius: 85, description: "Cultural practices - Fully implemented" },
+            { id: 8, name: "Event Sourcing", ring: "trial", quadrant: "techniques", angle: 150, radius: 130, description: "Data pattern - Pilot with payment processing" },
+            { id: 9, name: "Chaos Engineering", ring: "assess", quadrant: "techniques", angle: 105, radius: 210, description: "Resilience testing - Research phase" },
+            { id: 10, name: "Monolithic Architecture", ring: "hold", quadrant: "techniques", angle: 165, radius: 270, description: "Legacy architecture - Migration in progress" },
+            
+            // Platforms Quadrant
+            { id: 11, name: "AWS Cloud", ring: "adopt", quadrant: "platforms", angle: 225, radius: 65, description: "Cloud platform - Primary infrastructure" },
+            { id: 12, name: "PostgreSQL", ring: "adopt", quadrant: "platforms", angle: 240, radius: 75, description: "Database - Standard for transactional data" },
+            { id: 13, name: "Serverless (Lambda)", ring: "trial", quadrant: "platforms", angle: 210, radius: 135, description: "Serverless computing - Event processing pilot" },
+            { id: 14, name: "Quantum Computing", ring: "assess", quadrant: "platforms", angle: 255, radius: 220, description: "Quantum platforms - Long-term cryptography research" },
+            { id: 15, name: "On-premises DC", ring: "hold", quadrant: "platforms", angle: 195, radius: 265, description: "Legacy infrastructure - Decommissioning plan active" },
+            
+            // Languages & Frameworks Quadrant
+            { id: 16, name: "Java Spring Boot", ring: "adopt", quadrant: "languages", angle: 315, radius: 70, description: "Backend framework - Primary choice for services" },
+            { id: 17, name: "React.js", ring: "adopt", quadrant: "languages", angle: 330, radius: 85, description: "Frontend framework - Standard for web UIs" },
+            { id: 18, name: "Go Language", ring: "trial", quadrant: "languages", angle: 300, radius: 145, description: "Systems language - High-performance payment processing" },
+            { id: 19, name: "Rust", ring: "assess", quadrant: "languages", angle: 345, radius: 205, description: "Systems language - Cryptography applications research" },
+            { id: 20, name: "Legacy Java EE", ring: "hold", quadrant: "languages", angle: 285, radius: 275, description: "Legacy framework - Migration roadmap defined" }
+        ];
+        
+        // Colors for each ring
+        const ringColors = {
+            adopt: '#27ae60',
+            trial: '#f39c12', 
+            assess: '#3498db',
+            hold: '#e74c3c'
+        };
+        
+        // Quadrant colors (lighter versions)
+        const quadrantColors = {
+            tools: '#ecf0f1',
+            techniques: '#fdf2e9',
+            platforms: '#eaf2f8', 
+            languages: '#fdeaa7'
+        };
+        
+        function drawRadar() {
+            const svg = document.getElementById('radar-svg');
+            const centerX = 300;
+            const centerY = 300;
+            const maxRadius = 280;
+            
+            // Clear existing content
+            svg.innerHTML = '';
+            
+            // Draw quadrant backgrounds
+            const quadrants = [
+                { name: 'tools', startAngle: 0, endAngle: 90, color: quadrantColors.tools },
+                { name: 'techniques', startAngle: 90, endAngle: 180, color: quadrantColors.techniques },
+                { name: 'platforms', startAngle: 180, endAngle: 270, color: quadrantColors.platforms },
+                { name: 'languages', startAngle: 270, endAngle: 360, color: quadrantColors.languages }
+            ];
+            
+            quadrants.forEach(quad => {
+                const path = describeArc(centerX, centerY, maxRadius, quad.startAngle, quad.endAngle);
+                const quadrantPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                quadrantPath.setAttribute('d', `M ${centerX} ${centerY} ${path} Z`);
+                quadrantPath.setAttribute('fill', quad.color);
+                quadrantPath.setAttribute('stroke', '#bdc3c7');
+                quadrantPath.setAttribute('stroke-width', '1');
+                svg.appendChild(quadrantPath);
+            });
+            
+            // Draw concentric circles for rings
+            const rings = [
+                { name: 'adopt', radius: 100, color: ringColors.adopt },
+                { name: 'trial', radius: 160, color: ringColors.trial },
+                { name: 'assess', radius: 230, color: ringColors.assess },
+                { name: 'hold', radius: 280, color: ringColors.hold }
+            ];
+            
+            rings.forEach(ring => {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', centerX);
+                circle.setAttribute('cy', centerY);
+                circle.setAttribute('r', ring.radius);
+                circle.setAttribute('fill', 'none');
+                circle.setAttribute('stroke', ring.color);
+                circle.setAttribute('stroke-width', '3');
+                circle.setAttribute('stroke-opacity', '0.6');
+                svg.appendChild(circle);
+            });
+            
+            // Draw quadrant lines
+            const lines = [
+                { x1: centerX, y1: centerY - maxRadius, x2: centerX, y2: centerY + maxRadius },
+                { x1: centerX - maxRadius, y1: centerY, x2: centerX + maxRadius, y2: centerY }
+            ];
+            
+            lines.forEach(line => {
+                const lineElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lineElement.setAttribute('x1', line.x1);
+                lineElement.setAttribute('y1', line.y1);
+                lineElement.setAttribute('x2', line.x2);
+                lineElement.setAttribute('y2', line.y2);
+                lineElement.setAttribute('stroke', '#7f8c8d');
+                lineElement.setAttribute('stroke-width', '2');
+                svg.appendChild(lineElement);
+            });
+            
+            // Add quadrant labels
+            const labels = [
+                { text: '🔧 TOOLS', x: centerX + 150, y: centerY - 150 },
+                { text: '📚 TECHNIQUES', x: centerX - 150, y: centerY - 150 },
+                { text: '🏗️ PLATFORMS', x: centerX - 150, y: centerY + 150 },
+                { text: '💻 LANGUAGES', x: centerX + 150, y: centerY + 150 }
+            ];
+            
+            labels.forEach(label => {
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', label.x);
+                text.setAttribute('y', label.y);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '16');
+                text.setAttribute('font-weight', 'bold');
+                text.setAttribute('fill', '#2c3e50');
+                text.textContent = label.text;
+                svg.appendChild(text);
+            });
+            
+            // Draw technology points
+            technologies.forEach(tech => {
+                const radians = (tech.angle * Math.PI) / 180;
+                const x = centerX + tech.radius * Math.cos(radians);
+                const y = centerY + tech.radius * Math.sin(radians);
+                
+                // Create technology point
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                circle.setAttribute('r', '12');
+                circle.setAttribute('fill', ringColors[tech.ring]);
+                circle.setAttribute('stroke', 'white');
+                circle.setAttribute('stroke-width', '2');
+                circle.setAttribute('cursor', 'pointer');
+                circle.classList.add('tech-point');
+                
+                // Add number label
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x);
+                text.setAttribute('y', y + 4);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '12');
+                text.setAttribute('font-weight', 'bold');
+                text.setAttribute('fill', 'white');
+                text.setAttribute('pointer-events', 'none');
+                text.textContent = tech.id;
+                
+                // Add hover events
+                circle.addEventListener('mouseenter', (e) => showTooltip(e, tech));
+                circle.addEventListener('mouseleave', hideTooltip);
+                circle.addEventListener('mousemove', (e) => moveTooltip(e));
+                
+                svg.appendChild(circle);
+                svg.appendChild(text);
+            });
+            
+            // Add ring labels
+            const ringLabels = [
+                { text: 'ADOPT', radius: 50, color: ringColors.adopt },
+                { text: 'TRIAL', radius: 130, color: ringColors.trial },
+                { text: 'ASSESS', radius: 195, color: ringColors.assess },
+                { text: 'HOLD', radius: 255, color: ringColors.hold }
+            ];
+            
+            ringLabels.forEach(ring => {
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', centerX + ring.radius * Math.cos(Math.PI/4));
+                text.setAttribute('y', centerY - ring.radius * Math.sin(Math.PI/4));
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '12');
+                text.setAttribute('font-weight', 'bold');
+                text.setAttribute('fill', ring.color);
+                text.setAttribute('opacity', '0.8');
+                text.textContent = ring.text;
+                svg.appendChild(text);
+            });
+        }
+        
+        function describeArc(x, y, radius, startAngle, endAngle) {
+            const start = polarToCartesian(x, y, radius, endAngle);
+            const end = polarToCartesian(x, y, radius, startAngle);
+            const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+            return `L ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
+        }
+        
+        function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+            const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+            return {
+                x: centerX + (radius * Math.cos(angleInRadians)),
+                y: centerY + (radius * Math.sin(angleInRadians))
+            };
+        }
+        
+        function showTooltip(event, tech) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.innerHTML = `<strong>${tech.name}</strong><br>${tech.description}`;
+            tooltip.style.display = 'block';
+            moveTooltip(event);
+        }
+        
+        function hideTooltip() {
+            document.getElementById('tooltip').style.display = 'none';
+        }
+        
+        function moveTooltip(event) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY - 10) + 'px';
+        }
+        
+        // Initialize the radar
+        drawRadar();
+        
+        // Add interactivity to legend items
+        document.querySelectorAll('.tech-item').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                const number = this.querySelector('.tech-number').textContent;
+                const tech = technologies.find(t => t.id == number);
+                if (tech) {
+                    // Highlight corresponding point on radar
+                    const points = document.querySelectorAll('.tech-point');
+                    points.forEach(point => {
+                        point.style.opacity = '0.3';
+                    });
+                    if (points[tech.id - 1]) {
+                        points[tech.id - 1].style.opacity = '1';
+                        points[tech.id - 1].style.transform = 'scale(1.5)';
+                    }
+                }
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                const points = document.querySelectorAll('.tech-point');
+                points.forEach(point => {
+                    point.style.opacity = '1';
+                    point.style.transform = 'scale(1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
