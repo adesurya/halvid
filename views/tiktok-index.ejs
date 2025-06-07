@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShortVideo - Platform Video Pendek</title>
+    
+    <!-- CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: white;
+            overflow-x: hidden;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff0050;
+            text-decoration: none;
+        }
+
+        .nav-search {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 20px;
+            position: relative;
+        }
+
+        .search-container {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .search-container:focus-within {
+            border-color: #ff0050;
+            box-shadow: 0 0 0 2px rgba(255, 0, 80, 0.2);
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-btn {
+            padding: 12px 20px;
+            background: #ff0050;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: #e6004a;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-item {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(255, 0, 80, 0.2);
+            color: #ff0050;
+        }
+
+        /* Video Container */
+        .video-container {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+            scroll-snap-type: y mandatory;
+        }
+
+        .video-item {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            scroll-snap-align: start;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Video Info Overlay */
+        .video-info {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            right: 80px;
+            z-index: 100;
+            color: white;
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .video-description {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 12px;
+            line-height: 1.4;
+            max-height: 60px;
+            overflow: hidden;
+        }
+
+        .video-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .video-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .video-tags {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #ff0050;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .tag:hover {
+            background: rgba(255, 0, 80, 0.3);
+            color: white;
+        }
+
+        /* Side Actions */
+        .side-actions {
+            position: absolute;
+            right: 20px;
+            bottom: 120px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .action-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .action-btn.liked {
+            color: #ff0050;
+            background: rgba(255, 0, 80, 0.2);
+        }
+
+        .action-count {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: white;
+            white-space: nowrap;
+        }
+
+        /* Loading Indicator */
+        .loading {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading.show {
+            opacity: 1;
+        }
+
+        /* Navigation Indicators */
+        .nav-indicators {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-dot.active {
+            background: #ff0050;
+            transform: scale(1.2);
+        }
+
+        /* Play/Pause Overlay */
+        .play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .play-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .video-item.paused .play-overlay {
+            opacity: 1;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 100;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ff0050;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        /* Search Results Dropdown */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 12px;
+            margin-top: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .search-results.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .search-result-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .search-result-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .search-result-info {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 10px 15px;
+            }
+
+            .nav-search {
+                max-width: 200px;
+                margin: 0 10px;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .video-info {
+                bottom: 80px;
+                left: 15px;
+                right: 70px;
+            }
+
+            .side-actions {
+                right: 15px;
+                bottom: 100px;
+                gap: 15px;
+            }
+
+            .action-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+
+            .nav-indicators {
+                display: none;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .video-item {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .video-item.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.2); }
+            50% { transform: scale(1.1); }
+            75% { transform: scale(1.15); }
+        }
+
+        .action-btn.liked i {
+            animation: heartBeat 0.6s ease;
+        }
+
+        .floating-heart {
+            position: absolute;
+            pointer-events: none;
+            color: #ff0050;
+            font-size: 20px;
+            z-index: 200;
+            animation: floatUp 2s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) scale(1.5);
+            }
+        }
+
+        /* Custom Scrollbar */
+        .search-results::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .search-results::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .search-results::-webkit-scrollbar-thumb {
+            background: #ff0050;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="/" class="nav-logo">
+            <i class="fas fa-play-circle"></i>
+            <span>ShortVideo</span>
+        </a>
+        
+        <div class="nav-search">
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Cari video..." id="searchInput">
+                <button class="search-btn" id="searchBtn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            <div class="search-results" id="searchResults"></div>
+        </div>
+        
+        <div class="nav-menu">
+            <a href="/" class="nav-item active">
+                <i class="fas fa-home"></i>
+                Beranda
+            </a>
+            <a href="/grid" class="nav-item">
+                <i class="fas fa-th"></i>
+                Grid
+            </a>
+            <a href="#" class="nav-item" onclick="loadTrendingVideos()">
+                <i class="fas fa-fire"></i>
+                Trending
+            </a>
+        </div>
+    </nav>
+
+    <!-- Video Container -->
+    <div class="video-container" id="videoContainer">
+        <!-- Videos will be loaded here -->
+    </div>
+
+    <!-- Navigation Indicators -->
+    <div class="nav-indicators" id="navIndicators"></div>
+
+    <!-- Loading Indicator -->
+    <div class="loading" id="loadingIndicator">
+        <i class="fas fa-spinner fa-spin"></i>
+        Memuat video...
+    </div>
+
+    <script>
+        class TikTokVideoPlayer {
+            constructor() {
+                this.videos = [];
+                this.currentIndex = 0;
+                this.isLoading = false;
+                this.searchTimeout = null;
+                this.touchStartY = 0;
+                this.touchEndY = 0;
+                this.isTransitioning = false;
+                this.currentPage = 1;
+                this.hasMore = true;
+                
+                this.init();
+            }
+
+            async init() {
+                await this.loadInitialVideos();
+                this.setupEventListeners();
+                this.setupSearch();
+                this.showVideo(0);
+            }
+
+            async loadInitialVideos() {
+                try {
+                    this.showLoading();
+                    const response = await fetch('/api/videos?limit=10&sort=random');
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.videos = data.videos;
+                        this.currentPage = 1;
+                        this.hasMore = data.hasMore;
+                        this.renderVideos();
+                        this.updateNavIndicators();
+                    } else {
+                        console.error('Failed to load videos:', data.message);
+                        this.showError('Gagal memuat video');
+                    }
+                } catch (error) {
+                    console.error('Error loading videos:', error);
+                    this.showError('Terjadi kesalahan saat memuat video');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            renderVideos() {
+                const container = document.getElementById('videoContainer');
+                container.innerHTML = '';
+
+                this.videos.forEach((video, index) => {
+                    const videoElement = this.createVideoElement(video, index);
+                    container.appendChild(videoElement);
+                });
+            }
+
+            createVideoElement(video, index) {
+                const videoItem = document.createElement('div');
+                videoItem.className = 'video-item';
+                videoItem.dataset.index = index;
+
+                videoItem.innerHTML = `
+                    <video 
+                        class="video-player" 
+                        loop 
+                        muted 
+                        preload="metadata"
+                        poster="${video.thumbnail}"
+                        data-src="${video.videoUrl}"
+                    >
+                        <source src="${video.videoUrl}" type="video/mp4">
+                    </video>
+                    
+                    <div class="play-overlay">
+                        <div class="play-icon">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    
+                    <div class="video-info">
+                        <h3 class="video-title">${video.title}</h3>
+                        <p class="video-description">${video.description}</p>
+                        <div class="video-stats">
+                            <div class="video-stat">
+                                <i class="fas fa-eye"></i>
+                                <span>${this.formatNumber(video.views)}</span>
+                            </div>
+                            <div class="video-stat">
+                                <i class="fas fa-clock"></i>
+                                <span>${this.formatDuration(video.duration)}</span>
+                            </div>
+                        </div>
+                        <div class="video-tags">
+                            ${video.tags.map(tag => `<a href="#" class="tag" data-tag="${tag}">#${tag}</a>`).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="side-actions">
+                        <button class="action-btn like-btn" data-video-id="${video.id}" data-likes="${video.likes}">
+                            <i class="fas fa-heart"></i>
+                            <span class="action-count">${this.formatNumber(video.likes)}</span>
+                        </button>
+                        <button class="action-btn share-btn" data-video-id="${video.id}">
+                            <i class="fas fa-share"></i>
+                            <span class="action-count">Bagikan</span>
+                        </button>
+                        <button class="action-btn bookmark-btn" data-video-id="${video.id}">
+                            <i class="fas fa-bookmark"></i>
+                            <span class="action-count">Simpan</span>
+                        </button>
+                        <a href="/video/${video.id}" class="action-btn detail-btn">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="action-count">Detail</span>
+                        </a>
+                    </div>
+                `;
+
+                return videoItem;
+            }
+
+            setupEventListeners() {
+                const container = document.getElementById('videoContainer');
+                
+                // Touch events for mobile
+                container.addEventListener('touchstart', (e) => {
+                    this.touchStartY = e.touches[0].clientY;
+                }, { passive: true });
+
+                container.addEventListener('touchend', (e) => {
+                    this.touchEndY = e.changedTouches[0].clientY;
+                    this.handleSwipe();
+                }, { passive: true });
+
+                // Wheel event for desktop
+                container.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    if (this.isTransitioning) return;
+                    
+                    if (e.deltaY > 0) {
+                        this.nextVideo();
+                    } else {
+                        this.prevVideo();
+                    }
+                }, { passive: false });
+
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowDown' || e.key === ' ') {
+                        e.preventDefault();
+                        this.nextVideo();
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        this.prevVideo();
+                    }
+                });
+
+                // Click on video to play/pause
+                container.addEventListener('click', (e) => {
+                    if (e.target.closest('.action-btn') || e.target.closest('.tag')) return;
+                    
+                    const currentVideo = document.querySelector('.video-item.active .video-player');
+                    if (currentVideo) {
+                        this.togglePlayPause(currentVideo);
+                    }
+                });
+
+                // Like button functionality
+                container.addEventListener('click', (e) => {
+                    if (e.target.closest('.like-btn')) {
+                        e.stopPropagation();
+                        this.handleLike(e.target.closest('.like-btn'));
+                    }
+                });
+
+                // Share button functionality
+                container.addEventListener('click', (e) => {
+                    if (e.target.closest('.share-btn')) {
+                        e.stopPropagation();
+                        this.handleShare(e.target.closest('.share-btn'));
+                    }
+                });
+
+                // Tag click functionality
+                container.addEventListener('click', (e) => {
+                    if (e.target.closest('.tag')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const tag = e.target.closest('.tag').dataset.tag;
+                        this.searchVideos(tag);
+                    }
+                });
+            }
+
+            setupSearch() {
+                const searchInput = document.getElementById('searchInput');
+                const searchBtn = document.getElementById('searchBtn');
+                const searchResults = document.getElementById('searchResults');
+
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(this.searchTimeout);
+                    const query = e.target.value.trim();
+                    
+                    if (query.length > 2) {
+                        this.searchTimeout = setTimeout(() => {
+                            this.performSearch(query);
+                        }, 300);
+                    } else {
+                        this.hideSearchResults();
+                    }
+                });
+
+                searchInput.addEventListener('focus', () => {
+                    if (searchInput.value.trim().length > 2) {
+                        this.performSearch(searchInput.value.trim());
+                    }
+                });
+
+                searchInput.addEventListener('blur', () => {
+                    setTimeout(() => this.hideSearchResults(), 200);
+                });
+
+                searchBtn.addEventListener('click', () => {
+                    const query = searchInput.value.trim();
+                    if (query) {
+                        this.searchVideos(query);
+                    }
+                });
+
+                // Enter key to search
+                searchInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        const query = searchInput.value.trim();
+                        if (query) {
+                            this.searchVideos(query);
+                        }
+                    }
+                });
+            }
+
+            async performSearch(query) {
+                try {
+                    const response = await fetch(`/api/search/suggestions?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.showSearchResults(data.suggestions, query);
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                }
+            }
+
+            showSearchResults(results, query) {
+                const searchResults = document.getElementById('searchResults');
+                
+                if (results.length === 0) {
+                    searchResults.innerHTML = `
+                        <div class="search-result-item">
+                            <div class="search-result-title">Tidak ada hasil untuk "${query}"</div>
+                            <div class="search-result-info">Coba kata kunci lain</div>
+                        </div>
+                    `;
+                } else {
+                    searchResults.innerHTML = results.map(result => `
+                        <div class="search-result-item" data-query="${result.text}">
+                            <div class="search-result-title">${result.text}</div>
+                            <div class="search-result-info">${result.type === 'tag' ? 'Tag' : 'Judul'} • ${result.count} video</div>
+                        </div>
+                    `).join('');
+
+                    // Add click listeners to search results
+                    searchResults.querySelectorAll('.search-result-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            const query = item.dataset.query;
+                            this.searchVideos(query);
+                        });
+                    });
+                }
+
+                searchResults.classList.add('show');
+            }
+
+            hideSearchResults() {
+                const searchResults = document.getElementById('searchResults');
+                searchResults.classList.remove('show');
+            }
+
+            async searchVideos(query) {
+                try {
+                    this.showLoading();
+                    this.hideSearchResults();
+                    document.getElementById('searchInput').value = query;
+                    
+                    const response = await fetch(`/search?q=${encodeURIComponent(query)}`, {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success && data.videos.length > 0) {
+                        this.videos = data.videos;
+                        this.currentIndex = 0;
+                        this.renderVideos();
+                        this.updateNavIndicators();
+                        this.showVideo(0);
+                        this.showToast(`Ditemukan ${data.totalResults} video untuk "${query}"`);
+                    } else {
+                        this.showToast(`Tidak ada video ditemukan untuk "${query}"`);
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                    this.showToast('Gagal mencari video');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            handleSwipe() {
+                const diff = this.touchStartY - this.touchEndY;
+                const threshold = 50;
+
+                if (Math.abs(diff) > threshold) {
+                    if (diff > 0) {
+                        // Swipe up - next video
+                        this.nextVideo();
+                    } else {
+                        // Swipe down - previous video
+                        this.prevVideo();
+                    }
+                }
+            }
+
+            nextVideo() {
+                if (this.isTransitioning) return;
+                
+                if (this.currentIndex < this.videos.length - 1) {
+                    this.showVideo(this.currentIndex + 1);
+                } else if (this.hasMore) {
+                    // Load more videos
+                    this.loadMoreVideos();
+                } else {
+                    // Loop back to start
+                    this.showVideo(0);
+                }
+            }
+
+            prevVideo() {
+                if (this.isTransitioning) return;
+                
+                if (this.currentIndex > 0) {
+                    this.showVideo(this.currentIndex - 1);
+                }
+            }
+
+            async showVideo(index) {
+                if (index < 0 || index >= this.videos.length || this.isTransitioning) return;
+
+                this.isTransitioning = true;
+                
+                // Pause current video
+                const currentVideoElement = document.querySelector('.video-item.active .video-player');
+                if (currentVideoElement) {
+                    currentVideoElement.pause();
+                    clearInterval(currentVideoElement.progressInterval);
+                }
+
+                // Remove active class from current video
+                const currentItem = document.querySelector('.video-item.active');
+                if (currentItem) {
+                    currentItem.classList.remove('active');
+                }
+
+                // Update current index
+                this.currentIndex = index;
+
+                // Add active class to new video
+                const newItem = document.querySelector(`.video-item[data-index="${index}"]`);
+                if (newItem) {
+                    newItem.classList.add('active');
+                    
+                    // Scroll to the video
+                    newItem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    
+                    // Play the new video
+                    setTimeout(() => {
+                        const newVideoElement = newItem.querySelector('.video-player');
+                        if (newVideoElement) {
+                            this.playVideo(newVideoElement);
+                        }
+                        this.isTransitioning = false;
+                    }, 500);
+                }
+
+                // Update navigation indicators
+                this.updateNavIndicators();
+
+                // Update URL for sharing
+                this.updateURL();
+            }
+
+            playVideo(videoElement) {
+                videoElement.currentTime = 0;
+                videoElement.play().catch(console.error);
+                
+                // Update progress bar
+                this.updateProgressBar(videoElement);
+                
+                // Remove paused class
+                videoElement.closest('.video-item').classList.remove('paused');
+            }
+
+            togglePlayPause(videoElement) {
+                const videoItem = videoElement.closest('.video-item');
+                
+                if (videoElement.paused) {
+                    videoElement.play().catch(console.error);
+                    videoItem.classList.remove('paused');
+                } else {
+                    videoElement.pause();
+                    videoItem.classList.add('paused');
+                }
+            }
+
+            updateProgressBar(videoElement) {
+                const progressFill = videoElement.closest('.video-item').querySelector('.progress-fill');
+                
+                if (videoElement.progressInterval) {
+                    clearInterval(videoElement.progressInterval);
+                }
+                
+                videoElement.progressInterval = setInterval(() => {
+                    if (videoElement.duration) {
+                        const progress = (videoElement.currentTime / videoElement.duration) * 100;
+                        progressFill.style.width = progress + '%';
+                        
+                        if (videoElement.currentTime >= videoElement.duration) {
+                            clearInterval(videoElement.progressInterval);
+                            // Auto play next video
+                            setTimeout(() => this.nextVideo(), 500);
+                        }
+                    }
+                }, 100);
+            }
+
+            updateNavIndicators() {
+                const indicators = document.getElementById('navIndicators');
+                indicators.innerHTML = '';
+
+                // Show max 10 indicators
+                const maxIndicators = Math.min(this.videos.length, 10);
+                for (let i = 0; i < maxIndicators; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'nav-dot';
+                    if (i === this.currentIndex % maxIndicators) {
+                        dot.classList.add('active');
+                    }
+                    dot.addEventListener('click', () => this.showVideo(i));
+                    indicators.appendChild(dot);
+                }
+            }
+
+            updateURL() {
+                const currentVideo = this.videos[this.currentIndex];
+                if (currentVideo) {
+                    const newUrl = `${window.location.origin}?video=${currentVideo.id}`;
+                    history.replaceState({ videoIndex: this.currentIndex }, '', newUrl);
+                }
+            }
+
+            async loadMoreVideos() {
+                if (this.isLoading || !this.hasMore) return;
+                
+                this.isLoading = true;
+                this.showLoading();
+
+                try {
+                    const response = await fetch(`/api/videos?page=${this.currentPage + 1}&limit=5&sort=random`);
+                    const data = await response.json();
+
+                    if (data.success && data.videos.length > 0) {
+                        this.videos.push(...data.videos);
+                        this.currentPage++;
+                        this.hasMore = data.hasMore;
+                        
+                        this.renderNewVideos(data.videos);
+                        this.updateNavIndicators();
+                        
+                        // Continue to next video
+                        this.showVideo(this.currentIndex + 1);
+                    }
+                } catch (error) {
+                    console.error('Error loading more videos:', error);
+                    this.showToast('Gagal memuat video selanjutnya');
+                } finally {
+                    this.hideLoading();
+                    this.isLoading = false;
+                }
+            }
+
+            renderNewVideos(newVideos) {
+                const container = document.getElementById('videoContainer');
+                
+                newVideos.forEach((video, index) => {
+                    const videoIndex = this.videos.length - newVideos.length + index;
+                    const videoElement = this.createVideoElement(video, videoIndex);
+                    container.appendChild(videoElement);
+                });
+            }
+
+            async handleLike(button) {
+                const videoId = button.dataset.videoId;
+                const currentLikes = parseInt(button.dataset.likes);
+                const isLiked = button.classList.contains('liked');
+                
+                try {
+                    const endpoint = isLiked ? `/video/${videoId}/unlike` : `/video/${videoId}/like`;
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        button.classList.toggle('liked');
+                        button.dataset.likes = result.likes;
+                        button.querySelector('.action-count').textContent = this.formatNumber(result.likes);
+                        
+                        if (!isLiked) {
+                            // Create floating heart animation
+                            this.createFloatingHeart(button);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Like error:', error);
+                    this.showToast('Gagal memberikan like');
+                }
+            }
+
+            createFloatingHeart(button) {
+                const heart = document.createElement('div');
+                heart.className = 'floating-heart';
+                heart.innerHTML = '<i class="fas fa-heart"></i>';
+                
+                const rect = button.getBoundingClientRect();
+                heart.style.left = rect.left + rect.width / 2 + 'px';
+                heart.style.top = rect.top + rect.height / 2 + 'px';
+                heart.style.position = 'fixed';
+                
+                document.body.appendChild(heart);
+                
+                setTimeout(() => {
+                    heart.remove();
+                }, 2000);
+            }
+
+            handleShare(button) {
+                const videoId = button.dataset.videoId;
+                const video = this.videos.find(v => v.id == videoId);
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: video.title,
+                        text: video.description,
+                        url: `${window.location.origin}/video/${videoId}`
+                    }).catch(console.error);
+                } else {
+                    // Fallback - copy to clipboard
+                    const url = `${window.location.origin}/video/${videoId}`;
+                    navigator.clipboard.writeText(url).then(() => {
+                        this.showToast('Link video disalin ke clipboard!');
+                    }).catch(() => {
+                        this.showToast('Gagal menyalin link');
+                    });
+                }
+            }
+
+            showToast(message) {
+                const toast = document.createElement('div');
+                toast.style.cssText = `
+                    position: fixed;
+                    top: 100px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(0, 0, 0, 0.8);
+                    color: white;
+                    padding: 12px 24px;
+                    border-radius: 25px;
+                    font-size: 14px;
+                    z-index: 2000;
+                    backdrop-filter: blur(10px);
+                    max-width: 80%;
+                    text-align: center;
+                `;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            showError(message) {
+                const container = document.getElementById('videoContainer');
+                container.innerHTML = `
+                    <div style="
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        height: 100vh;
+                        text-align: center;
+                        padding: 20px;
+                    ">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #ff0050; margin-bottom: 20px;"></i>
+                        <h2 style="margin-bottom: 10px;">${message}</h2>
+                        <p style="opacity: 0.7; margin-bottom: 30px;">Silakan coba lagi nanti</p>
+                        <button onclick="location.reload()" style="
+                            background: #ff0050;
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 25px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">Muat Ulang</button>
+                    </div>
+                `;
+            }
+
+            showLoading() {
+                document.getElementById('loadingIndicator').classList.add('show');
+            }
+
+            hideLoading() {
+                document.getElementById('loadingIndicator').classList.remove('show');
+            }
+
+            formatNumber(num) {
+                if (num >= 1000000) {
+                    return (num / 1000000).toFixed(1) + 'M';
+                } else if (num >= 1000) {
+                    return (num / 1000).toFixed(1) + 'K';
+                } else {
+                    return num.toString();
+                }
+            }
+
+            formatDuration(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        // Global functions
+        async function loadTrendingVideos() {
+            const player = window.videoPlayer;
+            if (player) {
+                try {
+                    player.showLoading();
+                    const response = await fetch('/api/trending?limit=10');
+                    const data = await response.json();
+                    
+                    if (data.success && data.videos.length > 0) {
+                        player.videos = data.videos;
+                        player.currentIndex = 0;
+                        player.renderVideos();
+                        player.updateNavIndicators();
+                        player.showVideo(0);
+                        player.showToast('Video trending dimuat');
+                    }
+                } catch (error) {
+                    console.error('Error loading trending videos:', error);
+                    player.showToast('Gagal memuat video trending');
+                } finally {
+                    player.hideLoading();
+                }
+            }
+        }
+
+        // Initialize the TikTok-style video player
+        document.addEventListener('DOMContentLoaded', () => {
+            window.videoPlayer = new TikTokVideoPlayer();
+        });
+
+        // Prevent default scroll behavior
+        document.addEventListener('wheel', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Handle page visibility change
+        document.addEventListener('visibilitychange', () => {
+            const currentVideo = document.querySelector('.video-item.active .video-player');
+            if (currentVideo) {
+                if (document.hidden) {
+                    currentVideo.pause();
+                } else {
+                    currentVideo.play().catch(console.error);
+                }
+            }
+        });
+
+        // Handle browser back/forward
+        window.addEventListener('popstate', (e) => {
+            if (e.state && e.state.videoIndex) {
+                const player = window.videoPlayer;
+                if (player) {
+                    player.showVideo(e.state.videoIndex);
+                }
+            }
+        });
+
+        // Handle URL parameters on load
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const videoId = urlParams.get('video');
+            
+            if (videoId && window.videoPlayer) {
+                const videoIndex = window.videoPlayer.videos.findIndex(v => v.id == videoId);
+                if (videoIndex !== -1) {
+                    window.videoPlayer.showVideo(videoIndex);
+                }
+            }
+        });
+
+        // Auto-hide navbar on scroll (mobile)
+        let lastScrollTime = 0;
+        let navbar = document.querySelector('.navbar');
+        
+        window.addEventListener('scroll', () => {
+            const now = Date.now();
+            if (now - lastScrollTime > 100) {
+                if (window.scrollY > 100) {
+                    navbar.style.transform = 'translateY(-100%)';
+                } else {
+                    navbar.style.transform = 'translateY(0)';
+                }
+                lastScrollTime = now;
+            }
+        });
+
+        // Handle orientation change
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+                const currentItem = document.querySelector('.video-item.active');
+                if (currentItem) {
+                    currentItem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>
